@@ -103,13 +103,11 @@ release:
     - RELEASE_DESCRIPTION="Auto release by CI for tag $CI_COMMIT_TAG"
     - mkdir -p release_artifacts
     - mv GEHistoricalImagery.* release_artifacts/
-    # Create release via GitLab API
     - >
       curl --header "PRIVATE-TOKEN: $GITLAB_TOKEN" --request POST "https://${GITLAB_DOMAIN}/api/v4/projects/${CI_PROJECT_ID}/releases" 
       --form "name=$RELEASE_NAME" 
       --form "tag_name=$CI_COMMIT_TAG" 
       --form "description=$RELEASE_DESCRIPTION"
-    # Upload each artifact to release
     - |
       for artifact in release_artifacts/*; do
         curl --header "PRIVATE-TOKEN: $GITLAB_TOKEN" --request POST "https://${GITLAB_DOMAIN}/api/v4/projects/${CI_PROJECT_ID}/uploads" \
@@ -141,4 +139,3 @@ validate:
       - $CI_PIPELINE_SOURCE == "merge_request_event"
   script:
     - echo "Validasi build di branch master"
-    -  # Bisa tambahkan tes atau panggil script build jika perlu
