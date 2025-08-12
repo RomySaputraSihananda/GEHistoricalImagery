@@ -14,7 +14,6 @@ build_linux_x64:
   script:
     - apt-get update && apt-get install -y sed
     - VERSION=$(grep -Eio -m 1 '<Version>.*</Version>' ./src/GEHistoricalImagery/GEHistoricalImagery.csproj | sed -r 's/<\/?Version>//g')
-    - echo "Runtime Identifier: $RUNTIME_ID"
     - OUTPUT="bin/Publish/$RUNTIME_ID/gdal"
     - dotnet publish src/GEHistoricalImagery/GEHistoricalImagery.csproj --runtime $RUNTIME_ID --configuration $DOTNET_CONFIGURATION --output $OUTPUT -p:DefineConstants=LINUX -p:PublishProtocol=FileSystem -p:SelfContained=true -p:PublishTrimmed=true -p:PublishSingleFile=true
     - cd src/bin/Publish/$RUNTIME_ID
@@ -37,7 +36,6 @@ build_linux_arm64:
   script:
     - apt-get update && apt-get install -y sed
     - VERSION=$(grep -Eio -m 1 '<Version>.*</Version>' ./src/GEHistoricalImagery/GEHistoricalImagery.csproj | sed -r 's/<\/?Version>//g')
-    - echo "Runtime Identifier: $RUNTIME_ID"
     - OUTPUT="bin/Publish/$RUNTIME_ID/gdal"
     - dotnet publish src/GEHistoricalImagery/GEHistoricalImagery.csproj --runtime $RUNTIME_ID --configuration $DOTNET_CONFIGURATION --output $OUTPUT -p:DefineConstants=LINUX -p:PublishProtocol=FileSystem -p:SelfContained=true -p:PublishTrimmed=true -p:PublishSingleFile=true
     - cd src/bin/Publish/$RUNTIME_ID
