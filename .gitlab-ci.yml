@@ -11,6 +11,8 @@ build_linux_x64:
   image: mcr.microsoft.com/dotnet/sdk:9.0
   variables:
     RUNTIME_ID: "linux-x64"
+  only:
+    - tags
   script:
     - apt-get update && apt-get install -y sed
     - VERSION=$(grep -Eio -m 1 '<Version>.*</Version>' ./src/GEHistoricalImagery/GEHistoricalImagery.csproj | sed -r 's/<\/?Version>//g')
@@ -33,6 +35,8 @@ build_linux_arm64:
   image: mcr.microsoft.com/dotnet/sdk:9.0
   variables:
     RUNTIME_ID: "linux-arm64"
+  only:
+    - tags
   script:
     - apt-get update && apt-get install -y sed
     - VERSION=$(grep -Eio -m 1 '<Version>.*</Version>' ./src/GEHistoricalImagery/GEHistoricalImagery.csproj | sed -r 's/<\/?Version>//g')
@@ -48,46 +52,6 @@ build_linux_arm64:
   artifacts:
     paths:
       - GEHistoricalImagery.*-linux-arm64.tar.gz
-    expire_in: 7 days
-
-build_windows_x64:
-  stage: build
-  tags:
-    - windows
-  script:
-    - $env:VERSION = (Select-Xml -Path "./src/GEHistoricalImagery/GEHistoricalImagery.csproj" -XPath "/Project/PropertyGroup/Version").Node.InnerXML.Trim()
-    - $env:RUNTIME_ID = "win-x64"
-    - $env:OUTPUT = "bin/Publish/win-x64"
-    - dotnet publish src/GEHistoricalImagery/GEHistoricalImagery.csproj --runtime $env:RUNTIME_ID --configuration Release --output $env:OUTPUT -p:PublishProtocol=FileSystem -p:SelfContained=true -p:PublishAot=true
-    - Copy-Item "GEHistoricalImagery\bin\Release\gdal" "$env:OUTPUT\" -Force -Recurse
-    - Remove-Item -Path "$env:OUTPUT\gdal\x86" -Force -Recurse
-    - cd src/bin/Publish
-    - $env:ARTIFACT = "GEHistoricalImagery.${env:VERSION}-win-x64.zip"
-    - Compress-Archive -Path "win-x64\*" -DestinationPath "$env:ARTIFACT"
-    - Move-Item $env:ARTIFACT $env:CI_PROJECT_DIR\
-  artifacts:
-    paths:
-      - GEHistoricalImagery.*-win-x64.zip
-    expire_in: 7 days
-
-build_windows_x86:
-  stage: build
-  tags:
-    - windows
-  script:
-    - $env:VERSION = (Select-Xml -Path "./src/GEHistoricalImagery/GEHistoricalImagery.csproj" -XPath "/Project/PropertyGroup/Version").Node.InnerXML.Trim()
-    - $env:RUNTIME_ID = "win-x86"
-    - $env:OUTPUT = "bin/Publish/win-x86"
-    - dotnet publish src/GEHistoricalImagery/GEHistoricalImagery.csproj --runtime $env:RUNTIME_ID --configuration Release --output $env:OUTPUT -p:PublishProtocol=FileSystem -p:SelfContained=true -p:PublishAot=true
-    - Copy-Item "GEHistoricalImagery\bin\Release\gdal" "$env:OUTPUT\" -Force -Recurse
-    - Remove-Item -Path "$env:OUTPUT\gdal\x64" -Force -Recurse
-    - cd src/bin/Publish
-    - $env:ARTIFACT = "GEHistoricalImagery.${env:VERSION}-win-x86.zip"
-    - Compress-Archive -Path "win-x86\*" -DestinationPath "$env:ARTIFACT"
-    - Move-Item $env:ARTIFACT $env:CI_PROJECT_DIR\
-  artifacts:
-    paths:
-      - GEHistoricalImagery.*-win-x86.zip
     expire_in: 7 days
 
 release:
@@ -119,8 +83,6 @@ release:
   dependencies:
     - build_linux_x64
     - build_linux_arm64
-    - build_windows_x64
-    - build_windows_x86
   artifacts:
     paths:
       - release_artifacts/
@@ -130,10 +92,6 @@ validate:
   stage: build
   image: mcr.microsoft.com/dotnet/sdk:9.0
   only:
-    refs:
-      - master
-    variables:
-      - $CI_PIPELINE_SOURCE == "push"
-      - $CI_PIPELINE_SOURCE == "merge_request_event"
+    - tags
   script:
-    - echo "Validasi build di branch master"
+    - echo "Validasi build di tag $CI_COMMIT_TAG"
