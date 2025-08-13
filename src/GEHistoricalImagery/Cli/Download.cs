@@ -62,7 +62,7 @@ internal class Download : AoiVerb
 		if (ConcurrentDownload <= 0)
 			ConcurrentDownload = Environment.ProcessorCount;
 
-		if (hasError) return;
+		if (hasError) return;	
 
 		FileInfo saveFile;
 		try

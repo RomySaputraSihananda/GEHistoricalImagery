@@ -1,45 +1,85 @@
-﻿using CommandLine;
-using GEHistoricalImagery.Cli;
-using System.Diagnostics.CodeAnalysis;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GEHistoricalImagery;
 
-public enum ExitCode
+public class Program
 {
-	ProcessCompletedSuccessfully = 0,
-	NonRunNonError = 1,
-	ParseError = 2,
-	RunTimeError = 3
+    public static void Main(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
+		var config = builder.Configuration;
+
+        builder.Services.AddControllers();
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo 
+            { 
+                Title = config["ApiSettings:Title"] ?? "Hello World API",
+                Version = config["ApiSettings:Version"] ?? "1.0.0",
+                Description = config["ApiSettings:Description"] ?? "Simple API with authentication"
+            });
+
+            c.AddSecurityDefinition("ApiKey", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Description = "Enter your API Key in the field below:",
+                Name = "X-Api-Key",
+                In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+                Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+                Scheme = "ApiKeyScheme"
+            });
+
+            c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+            {
+                {
+                    new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                    {
+                        Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                        {
+                            Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                            Id = "ApiKey"
+                        },
+                        In = Microsoft.OpenApi.Models.ParameterLocation.Header
+                    },
+                    new string[] { }
+                }
+            });
+        });
+
+        var app = builder.Build();
+
+		app.UseSwagger();
+		app.UseSwaggerUI();
+
+        app.Use(async (context, next) =>
+        {
+            var path = context.Request.Path.Value?.ToLower();
+            
+            if (path == "/" || path == "/swagger" || path?.StartsWith("/swagger") == true)
+            {
+                await next();
+                return;
+            }
+
+            var validApiKey = app.Configuration["ApiSettings:ApiKey"] ?? "default-api-key";
+            
+            var providedApiKey = context.Request.Headers["X-Api-Key"].FirstOrDefault();
+            
+            if (string.IsNullOrEmpty(providedApiKey) || providedApiKey != validApiKey)
+            {
+                context.Response.StatusCode = 401;
+                await context.Response.WriteAsync("Invalid or missing API key");
+                return;
+            }
+
+            await next();
+        });
+
+        app.MapControllers();
+
+        app.Run(config["ApiSettings:Url"] ?? "http://localhost:4444");
+    }
 }
 
-internal class Program
-{
-	private static void ConfigureParser(ParserSettings settings)
-	{
-		settings.AutoVersion = true;
-		settings.AutoHelp = true;
-		settings.HelpWriter = Console.Error;
-		settings.CaseInsensitiveEnumValues = true;
-	}
-
-	[STAThread]
-	[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Info))]
-	[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Availability))]
-	[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Download))]
-	[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Dump))]
-	private static async Task Main(string[] args)
-	{
-		var parser = new Parser(ConfigureParser);
-
-		var result = parser.ParseArguments(args, typeof(Info), typeof(Availability), typeof(Download), typeof(Dump));
-
-		try
-		{
-			await result.WithParsedAsync<OptionsBase>(opt => opt.RunAsync());
-		}
-		catch (Exception ex)
-		{
-			Console.Error.WriteLine("An error occurred:\r\n\r\n" + ex.ToString());
-		}
-	}
-}

@@ -206,7 +206,7 @@ internal partial class Dump : AoiVerb
 			.Select(t => Task.Run(() => DownloadTile(root, t, desiredDate)));
 	}
 
-	private static async Task<TileDataset> DownloadTile(DbRoot root, KeyholeTile tile, DateOnly desiredDate)
+	public static async Task<TileDataset> DownloadTile(DbRoot root, KeyholeTile tile, DateOnly desiredDate)
 	{
 		if (await root.GetNodeAsync(tile) is not TileNode node)
 			return EmptyDataset(tile);
@@ -238,7 +238,7 @@ internal partial class Dump : AoiVerb
 
 	#region Common
 
-	private async Task Run_Common(DirectoryInfo saveFolder, DateOnly desiredDate, double tileCount, FilenameFormatter formatter, IEnumerable<Task<TileDataset>> generator)
+	public async Task Run_Common(DirectoryInfo saveFolder, DateOnly desiredDate, double tileCount, FilenameFormatter formatter, IEnumerable<Task<TileDataset>> generator)
 	{
 		int numTilesProcessed = 0;
 		int numTilesDownload = 0;
@@ -272,7 +272,7 @@ internal partial class Dump : AoiVerb
 		Message = $"No imagery available for tile at {tile.Wgs84Center}"
 	};
 
-	private class TileDataset
+	public class TileDataset
 	{
 		public DateOnly? LayerDate { get; init; }
 		public DateOnly TileDate { get; init; }
@@ -281,7 +281,7 @@ internal partial class Dump : AoiVerb
 		public required string? Message { get; init; }
 	}
 
-	private class FilenameFormatter
+	public class FilenameFormatter
 	{
 		public bool HasTileDate { get; }
 
