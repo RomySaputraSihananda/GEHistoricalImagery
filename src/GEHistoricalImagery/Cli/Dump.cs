@@ -140,7 +140,7 @@ internal partial class Dump : AoiVerb
 		}
 	}
 
-	private static async Task<TileDataset> DownloadEsriTile(WayBack wayBack, EsriTile tile, DateOnly desiredDate)
+	public static async Task<TileDataset> DownloadEsriTile(WayBack wayBack, EsriTile tile, DateOnly desiredDate)
 	{
 		try
 		{
@@ -165,7 +165,7 @@ internal partial class Dump : AoiVerb
 		return EmptyDataset(tile);
 	}
 
-	private static async Task<TileDataset> DownloadEsriTile(WayBack wayBack, EsriTile tile, Layer layer, bool getTileDate)
+	public static async Task<TileDataset> DownloadEsriTile(WayBack wayBack, EsriTile tile, Layer layer, bool getTileDate)
 	{
 		try
 		{

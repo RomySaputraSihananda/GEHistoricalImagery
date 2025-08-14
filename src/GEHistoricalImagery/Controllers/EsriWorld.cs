@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Amazon.S3;
 using Microsoft.AspNetCore.Builder;
-using Amazon.S3.Model;
 
 namespace GEHistoricalImagery.Controllers
 {
@@ -21,16 +20,20 @@ namespace GEHistoricalImagery.Controllers
         AmazonS3Client S3Client { get; set;}
         String BucketName { get; set; }
 
+        String BasePathS3 { get; } = "data/data_gambar/esri-world";
+        String AwsServiceURL { get; set; }
+
         public EsriWorldController()
         {
             var config = WebApplication.CreateBuilder().Configuration;
             this.BucketName = config["AwsSettings:S3BucketName"] ?? "";
+            this.AwsServiceURL = config["AwsSettings:AwsServiceURL"] ?? "http://localhost:4566";
             this.S3Client = new AmazonS3Client(
                 config["AwsSettings:AwsAccessKeyId"] ?? "",
                 config["AwsSettings:AwsSecretAccessKey"] ?? "",
                 new AmazonS3Config
                 {
-                    ServiceURL = config["AwsSettings:AwsServiceURL"] ?? "http://localhost:4566",
+                    ServiceURL = this.AwsServiceURL,
                     ForcePathStyle = true
                 }
             );
@@ -124,22 +127,61 @@ namespace GEHistoricalImagery.Controllers
             );
             var webMerc = Region.ToWebMercator();
             var layer = wayBack.Layers.OrderBy(l => int.Abs(l.Date.DayNumber - date.DayNumber)).First();
+            var stats = webMerc.GetPolygonalRegionStats<EsriTile>(level);
+
+            Dump.FilenameFormatter formatter = new Dump.FilenameFormatter("{D}/{Z}/{c}-{r}", stats);
 
             return Ok(
                 webMerc.GetTiles<EsriTile>(level).Select(
-                    t => Task.Run(async () => {
-                        var dt = await wayBack.GetNearestDatedTileAsync(t, date);
-                        if (dt is null) return Dump.EmptyDataset(t);
-                        return new()
+                    t => Task.Run(
+                        async () =>
                         {
-                            Tile = t,
-                            Dataset = await wayBack.DownloadTileAsync(dt.Layer, dt.Tile),
-                            Message = dt.CaptureDate == date ? null : $"Substituting imagery from {dt.CaptureDate} for tile at {t.Wgs84Center}",
-                            TileDate = dt.CaptureDate,
-                            LayerDate = dt.LayerDate
-                        };
-                    }) 
-                )   
+                            try
+                            {
+                                Dump.TileDataset data = await Dump.DownloadEsriTile(wayBack, t, date);
+                                
+                                String format = $"{this.BasePathS3}/{min_latitude}_{min_longitude}_{max_latitude}_{max_longitude}/{formatter.GetString(data)}";
+
+                                data.PathS3 = format + ".jpg";
+                                var datasetCopy = data.Dataset;
+                                _ = Task.Run(async () =>
+                                {
+                                    Console.WriteLine(format + ".json");
+                                    await this.S3Client.PutObjectAsync(new Amazon.S3.Model.PutObjectRequest
+                                    {
+                                        BucketName = this.BucketName,
+                                        Key = format + ".json",
+                                        InputStream = new MemoryStream(
+                                            System.Text.Encoding.UTF8.GetBytes(
+                                                System.Text.Json.JsonSerializer.Serialize(data)
+                                            )
+                                        ),
+                                        ContentType = "application/json"
+                                    });
+                                    Console.WriteLine(format + ".jpg");
+                                    await this.S3Client.PutObjectAsync(new Amazon.S3.Model.PutObjectRequest
+                                    {
+                                        BucketName = this.BucketName,
+                                        Key = format + ".jpg",
+                                        InputStream = new MemoryStream(
+                                            datasetCopy
+                                        ),
+                                        ContentType = "image/jpeg"
+                                    });
+                                });
+                                
+                                data.UrlS3 = $"{this.AwsServiceURL}/{this.BucketName}/{data.PathS3}";
+                                data.PathS3 = $"s3://{this.BucketName}/{data.PathS3}";
+                                data.Dataset = null;
+                                return data;
+                            }
+                            catch (Exception err)
+                            {
+                                return null;
+                            }
+                        }
+                    )
+                )
             );
         }
     }
