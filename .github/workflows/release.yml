@@ -45,6 +45,3 @@ jobs:
           prerelease: false
           files: |
             artifacts/*/*
-            
-            
-            
