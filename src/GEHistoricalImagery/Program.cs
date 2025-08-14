@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System.Reflection;
+using GEHistoricalImagery.Config;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,12 +13,15 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 		var config = builder.Configuration;
 
-        builder.Services.AddControllers();
+        builder.Services.AddControllers(options =>
+            {
+                options.Filters.Add<ApiResponseWrapperFilter>();
+            });
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(c =>
         {
-            c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo 
-            { 
+            c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+            {
                 Title = config["ApiSettings:Title"] ?? "Hello World API",
                 Version = config["ApiSettings:Version"] ?? "1.0.0",
                 Description = config["ApiSettings:Description"] ?? "Simple API with authentication"
@@ -46,6 +51,10 @@ public class Program
                     new string[] { }
                 }
             });
+            
+            var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            c.IncludeXmlComments(xmlPath);
         });
 
         var app = builder.Build();

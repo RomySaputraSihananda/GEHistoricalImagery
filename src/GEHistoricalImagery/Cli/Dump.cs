@@ -266,7 +266,7 @@ internal partial class Dump : AoiVerb
 		Console.WriteLine($"{numTilesDownload} out of {tileCount} downloaded");
 	}
 
-	private static TileDataset EmptyDataset(ITile tile) => new()
+	public static TileDataset EmptyDataset(ITile tile) => new()
 	{
 		Tile = tile,
 		Message = $"No imagery available for tile at {tile.Wgs84Center}"
@@ -277,8 +277,10 @@ internal partial class Dump : AoiVerb
 		public DateOnly? LayerDate { get; init; }
 		public DateOnly TileDate { get; init; }
 		public required ITile Tile { get; init; }
-		public byte[]? Dataset { get; init; }
+		public byte[]? Dataset { get; set; }
 		public required string? Message { get; init; }
+		public String? PathS3 { get; set; }
+		public String? UrlS3 { get; set; }
 	}
 
 	public class FilenameFormatter

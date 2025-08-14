@@ -24,7 +24,7 @@ internal class EarthImage<T> : IDisposable where T : IGeoCoordinate<T>
 #if LINUX
 		Gdal.AllRegister();
 #else
-		GdalConfiguration.ConfigureGdal();
+		// GdalConfiguration.ConfigureGdal();
 #endif
 		Gdal.SetCacheMax(1024 * 1024 * 300);
 	}
