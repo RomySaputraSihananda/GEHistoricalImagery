@@ -69,10 +69,10 @@ namespace GEHistoricalImagery.Controllers
             await foreach (
                 var item in wayBack.GetDatesAsync(
                     EsriTile.GetTile(
-                        new WebMercator(
-                            x: latitude,
-                            y: longitude
-                        ),
+                        new Wgs1984(
+                            latitude: latitude,
+                            longitude: longitude
+                        ).ToWebMercator(),
                         level
                     )
                 )
