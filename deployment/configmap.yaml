@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-google-earth-historical-imagery-config
+data:
+  appsettings.json: |
+    {
+      "ApiSettings": {
+        "ApiKey": "5202@ipa-etiletas-lacirotsih",
+        "Version": "1.0.0",
+        "Title": "Historical Satelite Api",
+        "Description": "Download and stitch historical aerial imagery from Google Earth and Esri World Atlas Wayback",
+        "Url": "http://0.0.0.0:4444"
+      },
+      "AwsSettings": {
+        "AwsAccessKeyId": "GLZG2JTWDFFSCQVE7TSQ",
+        "AwsSecretAccessKey": "VjTXOpbhGvYjDJDAt2PNgbxPKjYA4p4B7Btmm4Tw",
+        "AwsServiceURL": "http://10.12.1.149:8000",
+        "S3BucketName": "ai-pipeline-raw-data"
+      },
+      "Logging": {
+        "LogLevel": {
+          "Default": "Information",
+          "Microsoft.AspNetCore": "Warning"
+        }
+      },
+      "AllowedHosts": "*"
+    }

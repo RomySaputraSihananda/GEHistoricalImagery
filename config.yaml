@@ -1,0 +1,15 @@
+name: google-earth-historical-imagery
+pic: romy
+version: 1.0.0
+deployment_base_dir: deployment
+docker:
+  image:
+    name: google-earth-historical-imagery
+  registry:
+    address: 192.168.107.22
+    protocol: http
+    credential: harbor-credentials
+  namespace: crawler/smart-crawler
+kubernetes:
+  cluster: km
+  namespace: sc-api

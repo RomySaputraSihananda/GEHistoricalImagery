@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: smart-crawler
+    kind: api-google-earth-historical-imagery
+  name: api-google-earth-historical-imagery
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: smart-crawler
+      kind: api-google-earth-historical-imagery
+  template:
+    metadata:
+      labels:
+        app: smart-crawler
+        kind: api-google-earth-historical-imagery
+    spec:
+      imagePullSecrets:
+        - name: registryclipper
+      containers:
+        - name: api-google-earth-historical-imagery
+          image: xyz
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            tcpSocket:
+              port: 4444
+            timeoutSeconds: 5
+          ports:
+            - containerPort: 4444
+              name: api
+          resources:
+            limits:
+              cpu: "3"
+              memory: "3Gi"
+            requests:
+              cpu: "128m"
+              memory: "256Mi"
+          volumeMounts:
+            - mountPath: /out/appsettings.json
+              name: config
+              subPath: appsettings.json
+      volumes:
+        - configMap:
+            name: api-google-earth-historical-imagery-config
+          name: config

@@ -1,0 +1,19 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: api-google-earth-historical-imagery
+spec:
+  selector:
+    app: smart-crawler
+    kind: api-google-earth-historical-imagery
+  ports:
+    - protocol: TCP
+      port: 30099
+      targetPort: 4444
+      nodePort: 30099
+      name: api
+  type: LoadBalancer
+  externalIPs:
+    - 10.11.121.101
+    - 10.11.121.102
+    - 10.11.121.103
