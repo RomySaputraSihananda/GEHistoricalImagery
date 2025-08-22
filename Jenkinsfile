@@ -16,7 +16,7 @@ pipeline {
         stage('Prepare Pipeline') {
             steps {
                 script {
-                    def project = readYaml file: CONFIG
+                    project = readYaml file: CONFIG
                 }
             }
         }
