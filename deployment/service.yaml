@@ -6,13 +6,13 @@ spec:
   selector:
     app: smart-crawler
     kind: api-google-earth-historical-imagery
+  type: LoadBalancer
   ports:
-    - protocol: TCP
+    - name: api
+      protocol: TCP
       port: 30099
       targetPort: 4444
       nodePort: 30099
-      name: api
-  type: LoadBalancer
   externalIPs:
     - 10.11.121.101
     - 10.11.121.102
