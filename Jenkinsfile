@@ -59,8 +59,6 @@ pipeline {
                         """,
                         returnStdout: true
                     ).trim()
-                    for (message in messages.split('\n')) {
-                    }
                 }
             }
         }
