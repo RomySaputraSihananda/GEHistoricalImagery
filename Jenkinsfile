@@ -23,7 +23,6 @@ pipeline {
         stage('Build Image') {
             steps {
                 script {
-                    FAILED_STAGE = STAGE_NAME
                     imageName = docker.build(
                         "${project.docker.registry.address}/${project.docker.namespace}/${project.docker.image.name}:${project.version}"
                     ).imageName()
@@ -34,7 +33,6 @@ pipeline {
         stage('Push Image') {
             steps {
                 script {
-                    FAILED_STAGE = STAGE_NAME
                     docker.withRegistry(
                         "${project.docker.registry.protocol}://${project.docker.registry.address}", 
                         project.docker.registry.credential
@@ -50,7 +48,6 @@ pipeline {
         stage('Deploy Kubernetes') {
             steps {
                 script {
-                    FAILED_STAGE = STAGE_NAME
                     def kubeconfig = env.getProperty("KUBE_CONFIG_" + project.kubernetes.cluster.toUpperCase())
                     def messages = sh(
                         script: """
