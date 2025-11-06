@@ -281,6 +281,8 @@ internal partial class Dump : AoiVerb
 		public required string? Message { get; init; }
 		public String? PathS3 { get; set; }
 		public String? UrlS3 { get; set; }
+		public String? PathS3Tif { get; set; }
+		public String? UrlS3Tif { get; set; }
 	}
 
 	public class FilenameFormatter
